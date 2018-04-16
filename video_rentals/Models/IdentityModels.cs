@@ -20,6 +20,17 @@ namespace video_rentals.Models
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+
+        public DbSet<Customer> Customers { get; set; }
+
+        public DbSet<Movie> Movie { get; set; }
+
+        public DbSet<Genre> Genre { get; set; }
+
+        public DbSet<MemberShipType> MemberShipTypes { get; set; }
+
+
+
         public ApplicationDbContext()
             : base("DefaultConnection", throwIfV1Schema: false)
         {
