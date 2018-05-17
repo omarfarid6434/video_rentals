@@ -21,27 +21,30 @@ namespace video_rentals.Controllers
         protected override void Dispose(bool disposing)
         {
             _context.Dispose();
-        } 
+        }
 
         public ViewResult Index()
         {
-            var movies = _context.Movie.Include(m => m.Genre).ToList();
+            if (User.IsInRole(RoleName.CanManageMovies))
 
-            return View(movies);
+                return View("List");
+
+          
+                return View("ReadOnlyList");
         }
 
+
+        [Authorize(Roles = RoleName.CanManageMovies)]
         public ViewResult New()
         {
             var genres = _context.Genre.ToList();
 
-            var viewmodel = new MovieFormViewModel
+            var viewModel = new MovieFormViewModel
             {
-                Genre = genres
+                Genres = genres
             };
 
-            return View("MovieForm", viewmodel);
-            
-        
+            return View("MovieForm", viewModel);
         }
 
         public ActionResult Edit(int id)
@@ -53,12 +56,12 @@ namespace video_rentals.Controllers
 
             var viewModel = new MovieFormViewModel(movie)
             {
-                Movie = movie,
-                Genre = _context.Genre.ToList()
+                Genres = _context.Genre.ToList()
             };
 
             return View("MovieForm", viewModel);
         }
+
 
         public ActionResult Details(int id)
         {
@@ -71,17 +74,38 @@ namespace video_rentals.Controllers
 
         }
 
+
+        // GET: Movies/Random
+        public ActionResult Random()
+        {
+            var movie = new Movie() { Name = "Shrek!" };
+            var customers = new List<Customer>
+            {
+                new Customer { Name = "Customer 1" },
+                new Customer { Name = "Customer 2" }
+            };
+
+            var viewModel = new RandomMovieViewModel
+            {
+                Movie = movie,
+                Customer = customers
+            };
+
+            return View(viewModel);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Save(Movie movie)
         {
             if (!ModelState.IsValid)
             {
-                var viewmodel = new MovieFormViewModel(movie)
+                var viewModel = new MovieFormViewModel(movie)
                 {
-                    Genre = _context.Genre.ToList()
+                    Genres = _context.Genre.ToList()
                 };
-                return View("MovieForm", viewmodel);
+
+                return View("MovieForm", viewModel);
             }
 
             if (movie.Id == 0)
@@ -91,18 +115,16 @@ namespace video_rentals.Controllers
             }
             else
             {
-                var movieInDb = _context.Movie.SingleOrDefault(m => m.Id == movie.Id);
-
+                var movieInDb = _context.Movie.Single(m => m.Id == movie.Id);
                 movieInDb.Name = movie.Name;
                 movieInDb.GenreId = movie.GenreId;
                 movieInDb.NumberInStock = movie.NumberInStock;
-                movieInDb.RealaseDate = movie.RealaseDate;
+                movieInDb.ReleaseDate = movie.ReleaseDate;
             }
 
             _context.SaveChanges();
 
             return RedirectToAction("Index", "Movies");
         }
-
     }
 }
